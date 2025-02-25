@@ -15,7 +15,7 @@
                 </svg>
             @endif
 
-            <div class="truncate">{{ $team->name }}</div>
+            <div class="truncate">{{ $team->name ?? 'No Team' }}</div>
         </div>
     </x-dynamic-component>
 </form>
