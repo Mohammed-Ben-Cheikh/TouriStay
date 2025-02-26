@@ -8,7 +8,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/', function () {return view('home');})->name('home');
+    Route::get('/', function () {return view('home');})->middleware('isAdmin')->name('home');
     Route::get('/home', function () {return view('home');})->name('home');
     Route::get('/blogs', function () {return view('blogs');})->name('blogs');
     Route::get('/hébergements', [PropertyController::class, 'index'])->name('hébergements.index');

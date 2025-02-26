@@ -15,8 +15,29 @@ class PropertyController extends Controller
     public function index(Request $request)
     {
         $citiesByCountry = [
-            'France' => ['Paris', 'Nice', 'Lyon', 'Marseille'],
-            'Spain' => ['Barcelona', 'Madrid', 'Valencia', 'Seville']
+            'Argentine' => ['Buenos Aires'],
+            'Paraguay' => ['Asunción'],
+            'Uruguay' => ['Montevideo'],
+            'Espagne' => [
+                'Madrid',
+                'Barcelone',
+                'Séville',
+                'Bilbao',
+                'Málaga',
+                'Saragosse',
+                'Las Palmas',
+                'Saint-Sébastien',
+                'La Corogne'
+            ],
+            'Portugal' => ['Lisbonne', 'Porto'],
+            'Maroc' => [
+                'Casablanca',
+                'Rabat',
+                'Tanger',
+                'Marrakech',
+                'Agadir',
+                'Fès'
+            ]
         ];
         
         $query = Property::with(['primaryImage', 'images']);
@@ -39,9 +60,9 @@ class PropertyController extends Controller
         // Filtre pour les équipements
         if ($request->has('equipments')) {
             $requestedEquipments = (array) $request->equipments;
-            $query->where(function($q) use ($requestedEquipments) {
+            $query->where(function ($q) use ($requestedEquipments) {
                 foreach ($requestedEquipments as $equipment) {
-                    $q->whereJsonContains('equipments->'.$equipment, true);
+                    $q->whereJsonContains('equipments->' . $equipment, true);
                 }
             });
         }
