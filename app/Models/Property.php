@@ -22,14 +22,18 @@ class Property extends Model
         'rating',
         'equipments',
         'description',
-        'is_available'
+        'is_available',
+        'available_from',
+        'available_until'
     ];
 
     protected $casts = [
         'equipments' => 'array',
         'is_available' => 'boolean',
         'price' => 'decimal:2',
-        'rating' => 'decimal:1'
+        'rating' => 'decimal:1',
+        'available_from' => 'date',
+        'available_until' => 'date'
     ];
 
     public function user(): BelongsTo

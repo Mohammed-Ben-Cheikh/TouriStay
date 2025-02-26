@@ -16,7 +16,7 @@ class isOwner
         }
 
         if (Auth::user()->role !== 'owner') {
-            return redirect()->route('Become-an-owner')
+            return redirect()->route('become-an-owner')
                 ->with('warning', 'Cette section est réservée aux propriétaires. Devenez propriétaire pour y accéder.');
         }
 

@@ -123,7 +123,7 @@
                                     <span class="text-indigo-600 font-bold">{{ $apartment['price'] }}€ /nuit</span>
                                     <span class="text-sm text-gray-500">{{ $apartment['bedrooms'] }} chambres</span>
                                 </div>
-                                <a href="{{ route('Hébergements.show', $apartment['id']) }}" class="mt-4 block w-full text-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                                <a href="{{ route('hébergements.show', $apartment['id']) }}" class="mt-4 block w-full text-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
                                     Voir les détails
                                 </a>
                             </div>

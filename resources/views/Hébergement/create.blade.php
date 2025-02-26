@@ -2,7 +2,7 @@
     <div class="max-w-2xl mx-auto p-4">
         <h1 class="text-3xl font-bold mb-6">Add New Property</h1>
     
-        <form id="propertyForm" action="{{ route('Hébergements.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
+        <form id="propertyForm" action="{{ route('hébergements.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
             @csrf
     
             <div>
@@ -70,6 +70,26 @@
                     <label class="block text-sm font-medium text-gray-700">Number of bedrooms</label>
                     <input type="number" name="bedrooms" value="{{ old('bedrooms') }}" min="1" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
                 </div>
+            </div>
+
+            <div class="mt-6">
+                <h3 class="text-lg font-medium text-gray-700 mb-2">Availability Period</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Available From</label>
+                        <input type="date" name="available_from" value="{{ old('available_from') }}" 
+                               min="{{ date('Y-m-d') }}" 
+                               class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Available Until</label>
+                        <input type="date" name="available_until" value="{{ old('available_until') }}" 
+                               min="{{ date('Y-m-d', strtotime('+1 day')) }}" 
+                               class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Specify the period when your property will be available for booking.</p>
             </div>
 
             <div class="mt-6">
@@ -327,6 +347,27 @@
         
         // Initialize upload state on page load
         document.addEventListener('DOMContentLoaded', updateUploadState);
+
+        // Add date validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const fromDate = document.querySelector('input[name="available_from"]');
+            const untilDate = document.querySelector('input[name="available_until"]');
+            
+            fromDate.addEventListener('change', function() {
+                // Set minimum date for end date to be the day after start date
+                const nextDay = new Date(this.value);
+                nextDay.setDate(nextDay.getDate() + 1);
+                
+                // Format as YYYY-MM-DD
+                const formattedDate = nextDay.toISOString().split('T')[0];
+                untilDate.min = formattedDate;
+                
+                // If current end date is now invalid, update it
+                if (untilDate.value && new Date(untilDate.value) <= new Date(this.value)) {
+                    untilDate.value = formattedDate;
+                }
+            });
+        });
     </script>
 </x-app-layout>
 

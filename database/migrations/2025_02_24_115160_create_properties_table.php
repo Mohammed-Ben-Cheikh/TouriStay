@@ -22,6 +22,8 @@ return new class extends Migration
             $table->json('equipments');
             $table->text('description')->nullable();
             $table->boolean('is_available')->default(true);
+            $table->date('available_from')->nullable();
+            $table->date('available_until')->nullable();
             $table->timestamps();
         });
     }

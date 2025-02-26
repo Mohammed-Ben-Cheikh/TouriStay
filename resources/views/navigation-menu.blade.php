@@ -20,7 +20,7 @@
                         </x-nav-link>
                         <x-nav-link href="{{ route('hébergements.index') }}" :active="request()->routeIs('hébergements')" 
                             class="text-white hover:text-blue-200 transition-colors duration-200 text-lg">
-                            {{ __('Hébergements') }}
+                            {{ __('hébergements') }}
                         </x-nav-link>
                         <x-nav-link href="{{ route('blogs') }}" :active="request()->routeIs('blogs')" 
                             class="text-white hover:text-blue-200 transition-colors duration-200 text-lg">
@@ -90,9 +90,16 @@
                                 @endif
 
                                 <div class="border-t border-gray-200"></div>
-                                <x-dropdown-link href="{{ route('Become-an-owner') }}">
-                                    {{ __('devenir un propriétaire') }}
-                                </x-dropdown-link>
+
+                                @if (auth()->user()->role === 'owner')
+                                    <x-dropdown-link href="{{ route('owner.dashboard') }}">
+                                        {{ __('Dashboard') }}
+                                    </x-dropdown-link>
+                                @else
+                                    <x-dropdown-link href="{{ route('become-an-owner') }}">
+                                        {{ __('devenir un propriétaire') }}
+                                    </x-dropdown-link>
+                                @endif
 
                                 <div class="border-t border-gray-200"></div>
 

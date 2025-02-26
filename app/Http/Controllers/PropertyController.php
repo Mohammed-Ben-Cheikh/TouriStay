@@ -93,7 +93,7 @@ class PropertyController
 
         $apartments = $query->paginate(9);
 
-        return view('Hébergement.index', [
+        return view('hébergement.index', [
             'apartments' => $apartments,
             'citiesByCountry' => $citiesByCountry
         ]);
@@ -101,13 +101,17 @@ class PropertyController
 
     public function show($id)
     {
+        if (!is_numeric($id) || (int)$id != $id) {
+            abort(404);
+        }
+
         $apartment = Property::with(['images', 'user'])->findOrFail($id);
-        return view('Hébergement.show', compact('apartment'));
+        return view('hébergement.show', compact('apartment'));
     }
 
     public function create()
     {
-        return view('Hébergement.create');
+        return view('hébergement.create');
     }
 
     public function store(Request $request)
@@ -129,7 +133,9 @@ class PropertyController
             'type' => 'required|string',
             'equipments' => 'array',
             'images' => 'required|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'available_from' => 'required|date',
+            'available_until' => 'required|date|after:available_from'
         ]);
 
         try {
@@ -148,7 +154,9 @@ class PropertyController
                 'type' => $request->type,
                 'equipments' => $request->equipments ?? [],
                 'rating' => null,
-                'is_available' => true
+                'is_available' => true,
+                'available_from' => $request->available_from,
+                'available_until' => $request->available_until
             ]);
 
             // Process images
@@ -187,7 +195,7 @@ class PropertyController
             \DB::commit();
             
             // Redirect with success
-            return redirect()->route('Hébergements.show', $property)
+            return redirect()->route('hébergements.show', $property)
                 ->with('success', 'Property created successfully!');
                 
         } catch (\Exception $e) {
@@ -204,56 +212,79 @@ class PropertyController
         }
     }
 
-    public function edit(Property $property)
+    public function edit($id)
     {
-        $this->authorize('update', $property);
-        return view('apartments.edit', compact('property'));
+        if (!is_numeric($id) || (int)$id != $id) {
+            abort(404);
+        }
+
+        $property = Property::findOrFail($id);
+        
+        // Check if current user is the owner of the property
+        if (auth()->user()->id !== $property->user_id) {
+            return redirect()->route('owner.properties')
+                ->with('error', 'Vous n\'êtes pas autorisé à modifier cette propriété.');
+        }
+
+        return view('property.edit', compact('property'));
     }
 
-    public function update(Request $request, Property $property)
+    public function update(Request $request, $id)
     {
-        $this->authorize('update', $property);
+        if (!is_numeric($id) || (int)$id != $id) {
+            abort(404);
+        }
+
+        $property = Property::findOrFail($id);
+        
+        // Check if current user is the owner of the property
+        if (auth()->user()->id !== $property->user_id) {
+            return redirect()->route('owner.properties')
+                ->with('error', 'Vous n\'êtes pas autorisé à modifier cette propriété.');
+        }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'location' => 'required|string',
-            'city' => 'required|string',
-            'country' => 'required|string',
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'location' => 'required|max:255',
             'price' => 'required|numeric|min:0',
-            'bedrooms' => 'required|integer|min:1',
-            'type' => 'required|string',
-            'equipments' => 'required|array',
-            'images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'status' => 'required|in:active,inactive',
+            // Add other validation rules as needed
         ]);
 
         $property->update($validated);
 
-        if ($request->hasFile('images')) {
-            // Delete old images if replace_images is true
-            if ($request->boolean('replace_images')) {
-                foreach ($property->images as $image) {
-                    Storage::disk('public')->delete($image->image_url);
-                }
-                $property->images()->delete();
-            }
-
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('properties', 'public');
-                $property->images()->create([
-                    'image_url' => $path,
-                    'is_primary' => $index === 0 && $request->boolean('replace_images')
-                ]);
-            }
+        // Handle image upload if provided
+        if ($request->hasFile('image')) {
+            // Store the new image
+            $imagePath = $request->file('image')->store('property_images', 'public');
+            $property->image_url = '/storage/' . $imagePath;
+            $property->save();
         }
 
-        return redirect()->route('Hébergements.show', $property)
-            ->with('success', 'Property updated successfully.');
+        return redirect()->route('owner.properties')
+            ->with('success', 'Propriété mise à jour avec succès.');
     }
 
-    public function destroy(Property $property)
+    public function destroy($id)
     {
-        $this->authorize('delete', $property);
+        if (!is_numeric($id) || (int)$id != $id) {
+            abort(404);
+        }
+        
+        $property = Property::findOrFail($id);
+        
+        // Check if current user is the owner of the property
+        if (auth()->user()->id !== $property->user_id) {
+            return redirect()->route('owner.properties')
+                ->with('error', 'Vous n\'êtes pas autorisé à supprimer cette propriété.');
+        }
+
+        // Check if the property has bookings
+        if ($property->bookings()->count() > 0) {
+            return redirect()->route('owner.properties')
+                ->with('error', 'Impossible de supprimer une propriété avec des réservations existantes.');
+        }
 
         // Delete all associated images from storage
         foreach ($property->images as $image) {
@@ -262,7 +293,7 @@ class PropertyController
 
         $property->delete();
 
-        return redirect()->route('apartments.index')
-            ->with('success', 'Property deleted successfully.');
+        return redirect()->route('owner.properties')
+            ->with('success', 'Propriété supprimée avec succès.');
     }
 }
