@@ -5,7 +5,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
+                    <a href="{{ route('home') }}" class="flex items-center space-x-2">
                         <x-application-mark class="block h-12 w-auto" />
                         <span class="text-2xl font-bold text-white">TouriStay</span>
                     </a>
@@ -14,9 +14,17 @@
                 <!-- Navigation Links -->
                 @auth
                     <div class="hidden space-x-8 sm:ms-10 sm:flex items-center">
-                        <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')" 
+                        <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')" 
                             class="text-white hover:text-blue-200 transition-colors duration-200 text-lg">
-                            {{ __('Dashboard') }}
+                            {{ __('Home') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('hébergements.index') }}" :active="request()->routeIs('hébergements')" 
+                            class="text-white hover:text-blue-200 transition-colors duration-200 text-lg">
+                            {{ __('Hébergements') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('blogs') }}" :active="request()->routeIs('blogs')" 
+                            class="text-white hover:text-blue-200 transition-colors duration-200 text-lg">
+                            {{ __('Blogs') }}
                         </x-nav-link>
                         <!-- Add your other nav links here -->
                     </div>
@@ -118,8 +126,8 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-blue-900/95 backdrop-blur-sm">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+            <x-responsive-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
+                {{ __('home') }}
             </x-responsive-nav-link>
         </div>
 

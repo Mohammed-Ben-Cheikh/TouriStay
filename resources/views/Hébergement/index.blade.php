@@ -3,10 +3,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row gap-6">
                 <!-- Sidebar avec filtres -->
-                <div class="w-full md:w-80 flex-shrink-0">
-                    <div class="bg-white p-4 rounded-lg shadow sticky top-6 h-[70vh] overflow-y-auto">
+                <div class="w-full md:w-80 flex-shrink-0 ">
+                    <div class="bg-white p-4 rounded-lg shadow sticky top-6 h-[80vh] overflow-y-auto">
                         <h2 class="text-lg font-semibold text-gray-900 mb-4">Filtres</h2>
-                        <form action="{{ route('apartments.index') }}" method="GET" class="space-y-4">
+                        <form action="{{ route('hébergements.index') }}" method="GET" class="space-y-4">
                             <!-- Type de logement -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Type de logement</label>

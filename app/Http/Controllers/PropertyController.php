@@ -72,7 +72,7 @@ class PropertyController extends Controller
 
         $apartments = $query->paginate(9);
 
-        return view('apartments.index', [
+        return view('Hébergement.index', [
             'apartments' => $apartments,
             'citiesByCountry' => $citiesByCountry
         ]);
