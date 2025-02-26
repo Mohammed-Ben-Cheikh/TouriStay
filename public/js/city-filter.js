@@ -1,36 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const citiesByCountry = JSON.parse(document.getElementById('cities-data').getAttribute('data-cities'));
     const countrySelect = document.getElementById('country-select');
     const citySelect = document.getElementById('city-select');
-    const selectedCity = document.getElementById('cities-data').getAttribute('data-selected-city');
-
+    const citiesDataElement = document.getElementById('cities-data');
+    
+    if (!countrySelect || !citySelect || !citiesDataElement) {
+        return;
+    }
+    
+    const citiesByCountry = JSON.parse(citiesDataElement.dataset.cities);
+    const selectedCity = citiesDataElement.dataset.selectedCity;
+    
     function updateCities() {
         const selectedCountry = countrySelect.value;
+        
+        // Clear city options
         citySelect.innerHTML = '<option value="">Toutes les villes</option>';
         
-        if (!selectedCountry) {
-            Object.values(citiesByCountry).flat().forEach(city => {
-                const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                if (city === selectedCity) {
-                    option.selected = true;
-                }
-                citySelect.appendChild(option);
-            });
-        } else if (citiesByCountry[selectedCountry]) {
+        if (selectedCountry && citiesByCountry[selectedCountry]) {
             citiesByCountry[selectedCountry].forEach(city => {
                 const option = document.createElement('option');
                 option.value = city;
                 option.textContent = city;
-                if (city === selectedCity) {
-                    option.selected = true;
-                }
+                option.selected = city === selectedCity;
                 citySelect.appendChild(option);
             });
         }
     }
-
-    countrySelect.addEventListener('change', updateCities);
+    
+    // Initialize cities based on current country selection
     updateCities();
+    
+    // Update cities when country changes
+    countrySelect.addEventListener('change', updateCities);
 });

@@ -3,51 +3,93 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <img src="{{ $apartment['image_url'] }}" alt="{{ $apartment['title'] }}" 
-                                 class="w-full h-96 object-cover rounded-lg">
-                        </div>
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ $apartment['title'] }}</h1>
-                            <p class="text-gray-600 mb-4">{{ $apartment['location'] }}</p>
-                            <div class="border-t border-gray-200 py-4">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-600">Prix par nuit</span>
-                                    <span class="text-2xl font-bold text-indigo-600">{{ $apartment['price'] }}€</span>
-                                </div>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="text-gray-600">Chambres</span>
-                                    <span class="text-gray-900">{{ $apartment['bedrooms'] }}</span>
-                                </div>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="text-gray-600">Type</span>
-                                    <span class="text-gray-900 capitalize">{{ $apartment['type'] }}</span>
-                                </div>
-
-                                <!-- Équipements -->
-                                <div class="mt-6">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Équipements</h3>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        @foreach($apartment['equipments'] as $equipment => $available)
-                                            <div class="flex items-center space-x-2 {{ $available ? 'text-gray-900' : 'text-gray-400' }}">
-                                                @if($available)
-                                                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                @else
-                                                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                @endif
-                                                <span>{{ ucfirst(str_replace('_', ' ', $equipment)) }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                    <!-- Image Gallery -->
+                    <div class="mb-8">
+                        <div class="grid grid-cols-4 gap-4">
+                            <!-- Main Image -->
+                            <div class="col-span-4 md:col-span-3 relative">
+                                <img id="mainImage" 
+                                     src="{{ Storage::url($apartment->primaryImage->image_url) }}" 
+                                     alt="{{ $apartment->title }}"
+                                     class="w-full h-[600px] object-cover rounded-lg cursor-pointer"
+                                     onclick="openFullscreen(this.src)">
+                            </div>
+                            <!-- Thumbnails -->
+                            <div class="col-span-4 md:col-span-1">
+                                <div class="grid grid-cols-2 md:grid-cols-1 gap-4 h-[600px] overflow-y-auto">
+                                    @foreach($apartment->images as $image)
+                                        <div class="relative group">
+                                            <img src="{{ Storage::url($image->image_url) }}" 
+                                                 alt="{{ $apartment->title }}"
+                                                 class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity {{ $image->is_primary ? 'ring-2 ring-indigo-500' : '' }}"
+                                                 onclick="updateMainImage('{{ Storage::url($image->image_url) }}')">
+                                            @if($image->is_primary)
+                                                <span class="absolute top-2 left-2 px-2 py-1 bg-indigo-500 text-white text-xs rounded-full">
+                                                    Primary
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                            <div class="mt-6">
-                                <button class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700">
+                        </div>
+                    </div>
+
+                    <!-- Property Details -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left Column - Main Info -->
+                        <div class="lg:col-span-2">
+                            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $apartment->title }}</h1>
+                            <div class="flex items-center text-gray-600 mb-6">
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
+                                </svg>
+                                <span>{{ $apartment->location }}, {{ $apartment->city }}, {{ $apartment->country }}</span>
+                            </div>
+
+                            <div class="prose max-w-none mb-8">
+                                <h2 class="text-xl font-semibold mb-4">Description</h2>
+                                <p class="text-gray-600">{{ $apartment->description }}</p>
+                            </div>
+
+                            <!-- Équipements -->
+                            <div class="mb-8">
+                                <h2 class="text-xl font-semibold mb-4">Équipements</h2>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    @foreach($apartment->equipments as $equipment => $available)
+                                        <div class="flex items-center space-x-2 {{ $available ? 'text-gray-900' : 'text-gray-400' }}">
+                                            @if($available)
+                                                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                                                </svg>
+                                            @endif
+                                            <span>{{ ucfirst(str_replace('_', ' ', $equipment)) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Booking Card -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-gray-50 p-6 rounded-lg shadow-sm sticky top-6">
+                                <div class="mb-4">
+                                    <span class="text-3xl font-bold text-indigo-600">{{ $apartment->price }}€</span>
+                                    <span class="text-gray-600">/nuit</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                        <span class="block text-sm text-gray-600">Chambres</span>
+                                        <span class="block font-semibold">{{ $apartment->bedrooms }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm text-gray-600">Type</span>
+                                        <span class="block font-semibold capitalize">{{ $apartment->type }}</span>
+                                    </div>
+                                </div>
+
+                                <button class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition-colors">
                                     Réserver maintenant
                                 </button>
                             </div>
@@ -57,4 +99,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Fullscreen Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50" onclick="closeFullscreen()">
+        <button class="absolute top-4 right-4 text-white" onclick="closeFullscreen()">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <img id="fullscreenImage" class="max-w-[90%] max-h-[90vh] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="" alt="Fullscreen view">
+    </div>
+
+    <script>
+        function updateMainImage(src) {
+            document.getElementById('mainImage').src = src;
+        }
+
+        function openFullscreen(src) {
+            const modal = document.getElementById('imageModal');
+            const fullscreenImage = document.getElementById('fullscreenImage');
+            fullscreenImage.src = src;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreen() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            }
+        });
+    </script>
 </x-app-layout>

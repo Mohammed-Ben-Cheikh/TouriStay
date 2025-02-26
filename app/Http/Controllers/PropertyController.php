@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class PropertyController extends Controller
+class PropertyController
 {
     use AuthorizesRequests;
 
@@ -102,21 +102,23 @@ class PropertyController extends Controller
     public function show($id)
     {
         $apartment = Property::with(['images', 'user'])->findOrFail($id);
-        return view('apartments.show', compact('apartment'));
+        return view('Hébergement.show', compact('apartment'));
     }
 
     public function create()
     {
-        return view('apartments.create');
+        return view('Hébergement.create');
     }
 
     public function store(Request $request)
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('login')
+                ->with('error', 'You must be logged in to create a property.');
         }
 
-        $validated = $request->validate([
+        // Validation
+        $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'location' => 'required|string',
@@ -125,29 +127,81 @@ class PropertyController extends Controller
             'price' => 'required|numeric|min:0',
             'bedrooms' => 'required|integer|min:1',
             'type' => 'required|string',
-            'equipments' => 'required|array',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'equipments' => 'array',
+            'images' => 'required|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $property = Property::create([
-            'user_id' => Auth::id(),
-            ...$validated,
-            'rating' => null,
-            'is_available' => true
-        ]);
+        try {
+            \DB::beginTransaction();
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('properties', 'public');
-                $property->images()->create([
-                    'image_url' => $path,
-                    'is_primary' => $index === 0 // First image is primary
-                ]);
+            // Create property with basic info
+            $property = Property::create([
+                'user_id' => Auth::id(),
+                'title' => $request->title,
+                'description' => $request->description,
+                'location' => $request->location, 
+                'city' => $request->city,
+                'country' => $request->country,
+                'price' => $request->price,
+                'bedrooms' => $request->bedrooms,
+                'type' => $request->type,
+                'equipments' => $request->equipments ?? [],
+                'rating' => null,
+                'is_available' => true
+            ]);
+
+            // Process images
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                
+                // Track which images to skip (if any were deleted in the UI)
+                $deletedIndices = [];
+                if ($request->has('deleted_images')) {
+                    $deletedIndices = explode(',', $request->deleted_images);
+                }
+                
+                foreach ($images as $index => $image) {
+                    // Skip deleted images
+                    if (in_array((string)$index, $deletedIndices)) {
+                        continue;
+                    }
+                    
+                    $fileName = time() . '_' . $index . '.' . $image->getClientOriginalExtension();
+                    $folderPath = "properties/{$property->id}";
+                    
+                    // Make sure the directory exists
+                    Storage::disk('public')->makeDirectory($folderPath);
+                    
+                    // Store the image
+                    $path = $image->storeAs($folderPath, $fileName, 'public');
+                    
+                    // Create the image record
+                    $property->images()->create([
+                        'image_url' => $path,
+                        'is_primary' => $index === 0 // First image is primary
+                    ]);
+                }
             }
-        }
 
-        return redirect()->route('apartments.show', $property)
-            ->with('success', 'Property created successfully.');
+            \DB::commit();
+            
+            // Redirect with success
+            return redirect()->route('Hébergements.show', $property)
+                ->with('success', 'Property created successfully!');
+                
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error creating property: ' . $e->getMessage());
+            
+            // Clean up any images already uploaded
+            if (isset($property) && $property->id) {
+                Storage::disk('public')->deleteDirectory('properties/' . $property->id);
+            }
+            
+            return back()->withInput()
+                ->with('error', 'An error occurred while creating the property: ' . $e->getMessage());
+        }
     }
 
     public function edit(Property $property)
@@ -193,7 +247,7 @@ class PropertyController extends Controller
             }
         }
 
-        return redirect()->route('apartments.show', $property)
+        return redirect()->route('Hébergements.show', $property)
             ->with('success', 'Property updated successfully.');
     }
 

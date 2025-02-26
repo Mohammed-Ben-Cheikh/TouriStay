@@ -111,8 +111,11 @@
                 <div class="flex-grow">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         @foreach($apartments as $apartment)
+                        {{-- @php
+                            dd($apartment);
+                        @endphp --}}
                         <div class="bg-white rounded-lg shadow overflow-hidden">
-                            <img src="{{ $apartment['image_url'] }}" alt="{{ $apartment['title'] }}" class="w-full h-48 object-cover">
+                            <img src="{{ $apartment['primaryImage']['image_url'] }}" alt="{{ $apartment['title'] }}" class="w-full h-48 object-cover">
                             <div class="p-4">
                                 <h3 class="text-lg font-semibold text-gray-900">{{ $apartment['title'] }}</h3>
                                 <p class="text-gray-600">{{ $apartment['location'] }}</p>
@@ -120,7 +123,7 @@
                                     <span class="text-indigo-600 font-bold">{{ $apartment['price'] }}€ /nuit</span>
                                     <span class="text-sm text-gray-500">{{ $apartment['bedrooms'] }} chambres</span>
                                 </div>
-                                <a href="{{ route('apartments.show', $apartment['id']) }}" class="mt-4 block w-full text-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                                <a href="{{ route('Hébergements.show', $apartment['id']) }}" class="mt-4 block w-full text-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
                                     Voir les détails
                                 </a>
                             </div>

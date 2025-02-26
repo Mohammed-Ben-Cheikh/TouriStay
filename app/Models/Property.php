@@ -20,7 +20,6 @@ class Property extends Model
         'bedrooms',
         'type',
         'rating',
-        'image_url',
         'equipments',
         'description',
         'is_available'

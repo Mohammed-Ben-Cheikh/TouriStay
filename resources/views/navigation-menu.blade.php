@@ -90,6 +90,11 @@
                                 @endif
 
                                 <div class="border-t border-gray-200"></div>
+                                <x-dropdown-link href="{{ route('Become-an-owner') }}">
+                                    {{ __('devenir un propriétaire') }}
+                                </x-dropdown-link>
+
+                                <div class="border-t border-gray-200"></div>
 
                                 <!-- Authentication -->
                                 <form method="POST" action="{{ route('logout') }}" x-data>
