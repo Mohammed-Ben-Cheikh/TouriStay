@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\OwnerController;
+use App\Http\Controllers\TouristController;
+use App\Http\Controllers\PropertyController;
 
 Route::middleware([
     'auth:sanctum',
@@ -11,8 +12,8 @@ Route::middleware([
 ])->group(function () {
     
     // tourist routes
-    Route::get('/', function () {return view('home');})->name('home');
-    Route::get('/home', function () {return view('home');})->name('home');
+    Route::get('/', [TouristController::class,'index'])->name('home');
+    Route::get('/home', [TouristController::class,'index'])->name('home');
     Route::get('/blogs', function () {return view('blogs');})->name('blogs');
     Route::get('/hébergements', [PropertyController::class, 'index'])->name('hébergements.index');
     Route::get('/hébergements/{hébergement}', [PropertyController::class, 'show'])->name('hébergements.show');
@@ -28,7 +29,5 @@ Route::middleware([
         Route::put('/hébergement/{hébergement}', [PropertyController::class, 'update'])->name('hébergements.update');
         Route::delete('/hébergement/{hébergement}', [PropertyController::class, 'destroy'])->name('hébergements.destroy');
         Route::get('/owner/dashboard', [OwnerController::class, 'dashboard'])->name('owner.dashboard');
-        Route::get('/owner/properties', [OwnerController::class, 'properties'])->name('owner.properties');
-        Route::get('/owner/earnings', [OwnerController::class, 'earnings'])->name('owner.earnings');
     });
 });

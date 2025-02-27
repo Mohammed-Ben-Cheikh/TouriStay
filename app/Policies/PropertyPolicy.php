@@ -9,11 +9,11 @@ class PropertyPolicy
 {
     public function update(User $user, Property $property): bool
     {
-        return $user->id === $property->user_id || $user->isAdmin();
+        return $user->id === $property->user_id;
     }
 
     public function delete(User $user, Property $property): bool
     {
-        return $user->id === $property->user_id || $user->isAdmin();
+        return $user->id === $property->user_id;
     }
 }

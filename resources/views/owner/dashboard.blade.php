@@ -86,22 +86,25 @@
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
-                                                    @if($property->image_url)
-                                                        <img class="h-10 w-10 rounded-full object-cover" src="{{ $property->image_url }}" alt="">
+                                                    @if($property->primaryImage->image_url)
+                                                        <img class="h-10 w-10 rounded-full object-cover" src="{{ Storage::url($property->primaryImage->image_url) }}" alt="">
                                                     @endif
                                                     <div class="ml-4">
                                                         <div class="text-sm font-medium text-gray-900">
                                                             {{ $property->title }}
                                                         </div>
-                                                        <div class="text-sm text-gray-500">
-                                                            {{ $property->location }}
+                                                        <div class="flex text-sm text-gray-500">
+                                                            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
+                                                            </svg>
+                                                            {{ $property->location }}, {{ $property->city }}, {{ $property->country }}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $property->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                    {{ ucfirst($property->status) }}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $property->is_available ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                                    {{ $property->is_available ? 'Disponible' : 'Indisponible' }}
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -109,6 +112,12 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <a href="{{ route('hébergements.show', $property->id) }}" class="text-blue-600 hover:text-blue-900">Voir</a>
+                                                <a href="{{ route('hébergements.edit', $property->id) }}" class="text-yellow-600 hover:text-yellow-900 ml-4">Modifier</a>
+                                                <form action="{{ route('hébergements.destroy', $property->id) }}" method="POST" class="inline-block ml-4">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette propriété ?')">Supprimer</button>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

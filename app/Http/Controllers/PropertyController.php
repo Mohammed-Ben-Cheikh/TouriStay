@@ -130,8 +130,10 @@ class PropertyController
             'country' => 'required|string',
             'price' => 'required|numeric|min:0',
             'bedrooms' => 'required|integer|min:1',
+            'max_guests' => 'required|integer|min:1',
             'type' => 'required|string',
             'equipments' => 'array',
+            'minimum_nights' => 'required|integer|min:1',
             'images' => 'required|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'available_from' => 'required|date',
@@ -151,8 +153,10 @@ class PropertyController
                 'country' => $request->country,
                 'price' => $request->price,
                 'bedrooms' => $request->bedrooms,
+                'max_guests' => $request->max_guests,
                 'type' => $request->type,
                 'equipments' => $request->equipments ?? [],
+                'minimum_nights' => $request->minimum_nights,
                 'rating' => null,
                 'is_available' => true,
                 'available_from' => $request->available_from,
@@ -218,11 +222,11 @@ class PropertyController
             abort(404);
         }
 
-        $property = Property::findOrFail($id);
+        $property = Property::with('images')->findOrFail($id);
         
         // Check if current user is the owner of the property
         if (auth()->user()->id !== $property->user_id) {
-            return redirect()->route('owner.properties')
+            return redirect()->route('owner.dashboard')
                 ->with('error', 'Vous n\'êtes pas autorisé à modifier cette propriété.');
         }
 
@@ -239,7 +243,7 @@ class PropertyController
         
         // Check if current user is the owner of the property
         if (auth()->user()->id !== $property->user_id) {
-            return redirect()->route('owner.properties')
+            return redirect()->route('owner.dashboard')
                 ->with('error', 'Vous n\'êtes pas autorisé à modifier cette propriété.');
         }
 
@@ -247,23 +251,51 @@ class PropertyController
             'title' => 'required|max:255',
             'description' => 'required',
             'location' => 'required|max:255',
+            'city' => 'required|string',
+            'country' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'status' => 'required|in:active,inactive',
-            // Add other validation rules as needed
+            'bedrooms' => 'required|integer|min:1',
+            'max_guests' => 'required|integer|min:1',
+            'type' => 'required|string',
+            'equipments' => 'array',
+            'minimum_nights' => 'required|integer|min:1',
+            'is_available' => 'boolean',
+            'available_from' => 'required|date',
+            'available_until' => 'required|date|after:available_from'
         ]);
 
-        $property->update($validated);
+        try {
+            \DB::beginTransaction();
 
-        // Handle image upload if provided
-        if ($request->hasFile('image')) {
-            // Store the new image
-            $imagePath = $request->file('image')->store('property_images', 'public');
-            $property->image_url = '/storage/' . $imagePath;
-            $property->save();
+            // Update property with basic info
+            $property->update($validated);
+
+            // Handle image upload if provided
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $fileName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    $folderPath = "properties/{$property->id}";
+                    
+                    // Make sure the directory exists
+                    Storage::disk('public')->makeDirectory($folderPath);
+                    
+                    // Store the image
+                    $path = $image->storeAs($folderPath, $fileName, 'public');
+                    
+                    // Create image record
+                    $property->images()->create([
+                        'image_url' => $path,
+                        'is_primary' => false // New images are not primary by default
+                    ]);
+                }
+            }
+
+            \DB::commit();
+            return redirect()->route('owner.dashboard')->with('success', 'Property updated successfully!');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withInput()->with('error', 'Error updating property: ' . $e->getMessage());
         }
-
-        return redirect()->route('owner.properties')
-            ->with('success', 'Propriété mise à jour avec succès.');
     }
 
     public function destroy($id)
@@ -276,13 +308,13 @@ class PropertyController
         
         // Check if current user is the owner of the property
         if (auth()->user()->id !== $property->user_id) {
-            return redirect()->route('owner.properties')
+            return redirect()->route('owner.dashboard')
                 ->with('error', 'Vous n\'êtes pas autorisé à supprimer cette propriété.');
         }
 
         // Check if the property has bookings
         if ($property->bookings()->count() > 0) {
-            return redirect()->route('owner.properties')
+            return redirect()->route('owner.dashboard')
                 ->with('error', 'Impossible de supprimer une propriété avec des réservations existantes.');
         }
 
@@ -293,7 +325,7 @@ class PropertyController
 
         $property->delete();
 
-        return redirect()->route('owner.properties')
+        return redirect()->route('owner.dashboard')
             ->with('success', 'Propriété supprimée avec succès.');
     }
 }

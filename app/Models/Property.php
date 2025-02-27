@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Property extends Model
 {
@@ -13,18 +14,19 @@ class Property extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'description',
         'location',
         'city',
         'country',
         'price',
         'bedrooms',
+        'max_guests',
         'type',
-        'rating',
         'equipments',
-        'description',
-        'is_available',
+        'minimum_nights',
         'available_from',
-        'available_until'
+        'available_until',
+        'is_available'
     ];
 
     protected $casts = [
@@ -56,5 +58,16 @@ class Property extends Model
     public function favoriteUsers()
     {
         return $this->belongsToMany(User::class, 'favorites');
+    }
+ 
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    // Add methods to handle image URLs if needed
+    public function getImageUrl($image)
+    {
+        return Storage::url($image->image_url);
     }
 }

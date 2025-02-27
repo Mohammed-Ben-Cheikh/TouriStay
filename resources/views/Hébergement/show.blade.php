@@ -5,33 +5,30 @@
                 <div class="p-6">
                     <!-- Image Gallery -->
                     <div class="mb-8">
-                        <div class="grid grid-cols-4 gap-4">
-                            <!-- Main Image -->
-                            <div class="col-span-4 md:col-span-3 relative">
-                                <img id="mainImage" 
-                                     src="{{ Storage::url($apartment->primaryImage->image_url) }}" 
-                                     alt="{{ $apartment->title }}"
-                                     class="w-full h-[600px] object-cover rounded-lg cursor-pointer"
-                                     onclick="openFullscreen(this.src)">
-                            </div>
-                            <!-- Thumbnails -->
-                            <div class="col-span-4 md:col-span-1">
-                                <div class="grid grid-cols-2 md:grid-cols-1 gap-4 h-[600px] overflow-y-auto">
-                                    @foreach($apartment->images as $image)
-                                        <div class="relative group">
-                                            <img src="{{ Storage::url($image->image_url) }}" 
-                                                 alt="{{ $apartment->title }}"
-                                                 class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity {{ $image->is_primary ? 'ring-2 ring-indigo-500' : '' }}"
-                                                 onclick="updateMainImage('{{ Storage::url($image->image_url) }}')">
-                                            @if($image->is_primary)
-                                                <span class="absolute top-2 left-2 px-2 py-1 bg-indigo-500 text-white text-xs rounded-full">
-                                                    Primary
-                                                </span>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                        <!-- Thumbnails Above -->
+                        <div class="grid grid-cols-4 gap-4 mb-4">
+                            @foreach($apartment->images->take(4) as $image)
+                                <div class="relative group">
+                                    <img src="{{ Storage::url($image->image_url) }}" 
+                                         alt="{{ $apartment->title }}"
+                                         class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity {{ $image->is_primary ? 'ring-2 ring-indigo-500' : '' }}"
+                                         onclick="updateMainImage('{{ Storage::url($image->image_url) }}')">
+                                    @if($image->is_primary)
+                                        <span class="absolute top-2 left-2 px-2 py-1 bg-indigo-500 text-white text-xs rounded-full">
+                                            Primary
+                                        </span>
+                                    @endif
                                 </div>
-                            </div>
+                            @endforeach
+                        </div>
+                        
+                        <!-- Main Image -->
+                        <div class="relative">
+                            <img id="mainImage" 
+                                 src="{{ Storage::url($apartment->primaryImage->image_url) }}" 
+                                 alt="{{ $apartment->title }}"
+                                 class="w-full h-[400px] object-cover rounded-lg cursor-pointer"
+                                 onclick="openFullscreen(this.src)">
                         </div>
                     </div>
 
@@ -86,6 +83,14 @@
                                     <div>
                                         <span class="block text-sm text-gray-600">Type</span>
                                         <span class="block font-semibold capitalize">{{ $apartment->type }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm text-gray-600">Séjour minimum</span>
+                                        <span class="block font-semibold">{{ $apartment->minimum_nights }} nuits</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm text-gray-600">Capacité max.</span>
+                                        <span class="block font-semibold">{{ $apartment->max_guests }} personnes</span>
                                     </div>
                                 </div>
 

@@ -2,7 +2,7 @@
     <div class="max-w-2xl mx-auto p-4">
         <h1 class="text-3xl font-bold mb-6">Add New Property</h1>
     
-        <form id="propertyForm" action="{{ route('hébergements.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
+        <form id="propertyForm" action="{{ route('hébergements.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data" onsubmit="return validateForm()">
             @csrf
     
             <div>
@@ -63,12 +63,24 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Price per night</label>
-                    <input type="number" name="price" value="{{ old('price') }}" step="0.01" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                    <input type="number" name="price" value="{{ old('price') }}" step="0.01" min="0" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Number of bedrooms</label>
-                    <input type="number" name="bedrooms" value="{{ old('bedrooms') }}" min="1" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                    <input type="number" name="bedrooms" value="{{ old('bedrooms') }}" min="1" max="20" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Maximum Guests</label>
+                    <input type="number" name="max_guests" value="{{ old('max_guests') }}" min="1" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Minimum Nights</label>
+                    <input type="number" name="minimum_nights" value="{{ old('minimum_nights') }}" min="1" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
                 </div>
             </div>
 
@@ -227,8 +239,10 @@
             for (let i = 0; i < newFiles.length && addedCount < remainingSlots; i++) {
                 const file = newFiles[i];
                 
-                if (!file.type.startsWith('image/')) {
-                    alert('Please upload only image files');
+                // Vérification plus stricte des types MIME
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Format d\'image non valide. Utilisez JPG, PNG ou GIF.');
                     continue;
                 }
                 
@@ -353,21 +367,53 @@
             const fromDate = document.querySelector('input[name="available_from"]');
             const untilDate = document.querySelector('input[name="available_until"]');
             
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            fromDate.min = today;
+            
             fromDate.addEventListener('change', function() {
-                // Set minimum date for end date to be the day after start date
-                const nextDay = new Date(this.value);
+                const selectedDate = new Date(this.value);
+                const nextDay = new Date(selectedDate);
                 nextDay.setDate(nextDay.getDate() + 1);
+                untilDate.min = nextDay.toISOString().split('T')[0];
                 
-                // Format as YYYY-MM-DD
-                const formattedDate = nextDay.toISOString().split('T')[0];
-                untilDate.min = formattedDate;
-                
-                // If current end date is now invalid, update it
-                if (untilDate.value && new Date(untilDate.value) <= new Date(this.value)) {
-                    untilDate.value = formattedDate;
+                if (untilDate.value && new Date(untilDate.value) <= selectedDate) {
+                    untilDate.value = nextDay.toISOString().split('T')[0];
                 }
             });
+
+            // Set maximum date to 2 years from now
+            const twoYearsFromNow = new Date();
+            twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+            const maxDate = twoYearsFromNow.toISOString().split('T')[0];
+            fromDate.max = maxDate;
+            untilDate.max = maxDate;
         });
+
+        // Ajout de la fonction de validation du formulaire
+        function validateForm() {
+            const form = document.getElementById('propertyForm');
+            const fromDate = form.querySelector('input[name="available_from"]');
+            const untilDate = form.querySelector('input[name="available_until"]');
+            const price = form.querySelector('input[name="price"]');
+            
+            if (new Date(fromDate.value) >= new Date(untilDate.value)) {
+                alert('La date de fin doit être postérieure à la date de début');
+                return false;
+            }
+
+            if (parseFloat(price.value) <= 0) {
+                alert('Le prix doit être supérieur à 0');
+                return false;
+            }
+
+            if (currentFiles.length === 0) {
+                alert('Veuillez ajouter au moins une image');
+                return false;
+            }
+
+            return true;
+        }
     </script>
 </x-app-layout>
 
