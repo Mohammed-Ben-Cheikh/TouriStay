@@ -230,7 +230,7 @@ class PropertyController
                 ->with('error', 'Vous n\'êtes pas autorisé à modifier cette propriété.');
         }
 
-        return view('property.edit', compact('property'));
+        return view('Hébergement.edit', compact('property'));
     }
 
     public function update(Request $request, $id)
