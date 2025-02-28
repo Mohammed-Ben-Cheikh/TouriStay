@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\TouristController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\FavoriteController;
 
 Route::middleware([
     'auth:sanctum',
@@ -17,6 +18,10 @@ Route::middleware([
     Route::get('/blogs', function () {return view('blogs');})->name('blogs');
     Route::get('/hébergements', [PropertyController::class, 'index'])->name('hébergements.index');
     Route::get('/hébergements/{hébergement}', [PropertyController::class, 'show'])->name('hébergements.show');
+
+    // Favorites routes
+    Route::post('/favorites/{property}', [FavoriteController::class, 'toggleFavorite'])->name('favorites.toggle');
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
 
     // Owner routes
     Route::get('/become-an-owner', [OwnerController::class, 'welcome'])->name('become-an-owner');

@@ -13,7 +13,7 @@
     @foreach ($property as $prop)
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <div class="relative">
-                <img src="{{ $prop->primaryImage?->url ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267' }}" 
+                <img src="{{ $prop->primaryImage?->image_url ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267' }}" 
                     alt="{{ $prop->title }}"
                     class="w-full h-48 object-cover">
                 <span class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-md text-sm">

@@ -1,35 +1,40 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const citiesByCountry = JSON.parse(document.getElementById('cities-data').getAttribute('data-cities'));
     const countrySelect = document.getElementById('country-select');
     const citySelect = document.getElementById('city-select');
-    const citiesDataElement = document.getElementById('cities-data');
-    
-    if (!countrySelect || !citySelect || !citiesDataElement) {
-        return;
-    }
-    
-    const citiesByCountry = JSON.parse(citiesDataElement.dataset.cities);
-    const selectedCity = citiesDataElement.dataset.selectedCity;
-    
+    const selectedCity = document.getElementById('cities-data').getAttribute('data-selected-city');
+
     function updateCities() {
         const selectedCountry = countrySelect.value;
-        
-        // Clear city options
+
+        // Reset city select with default option
         citySelect.innerHTML = '<option value="">Toutes les villes</option>';
-        
-        if (selectedCountry && citiesByCountry[selectedCountry]) {
+
+        if (!selectedCountry) {
+            // Show all cities from all countries
+            Object.values(citiesByCountry).flat().forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.id;
+                option.textContent = city.nom;
+                if (city.nom === selectedCity) {
+                    option.selected = true;
+                }
+                citySelect.appendChild(option);
+            });
+        } else if (citiesByCountry[selectedCountry]) {
+            // Show cities only for selected country
             citiesByCountry[selectedCountry].forEach(city => {
                 const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                option.selected = city === selectedCity;
+                option.value = city.id;
+                option.textContent = city.nom;
+                if (city.nom === selectedCity) {
+                    option.selected = true;
+                }
                 citySelect.appendChild(option);
             });
         }
     }
-    
-    // Initialize cities based on current country selection
-    updateCities();
-    
-    // Update cities when country changes
+
     countrySelect.addEventListener('change', updateCities);
+    updateCities();
 });

@@ -88,7 +88,10 @@
                                         {{ __('API Tokens') }}
                                     </x-dropdown-link>
                                 @endif
-
+                                <div class="border-t border-gray-200"></div>
+                                <x-dropdown-link href="{{ route('favorites.index') }}">
+                                    {{ __('Mes Favorites') }}
+                                </x-dropdown-link>
                                 <div class="border-t border-gray-200"></div>
 
                                 @if (auth()->user()->role === 'owner')

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Models\Pays;
 
 class PropertyController
 {
@@ -14,42 +15,33 @@ class PropertyController
 
     public function index(Request $request)
     {
-        $citiesByCountry = [
-            'Argentine' => ['Buenos Aires'],
-            'Paraguay' => ['Asunción'],
-            'Uruguay' => ['Montevideo'],
-            'Espagne' => [
-                'Madrid',
-                'Barcelone',
-                'Séville',
-                'Bilbao',
-                'Málaga',
-                'Saragosse',
-                'Las Palmas',
-                'Saint-Sébastien',
-                'La Corogne'
-            ],
-            'Portugal' => ['Lisbonne', 'Porto'],
-            'Maroc' => [
-                'Casablanca',
-                'Rabat',
-                'Tanger',
-                'Marrakech',
-                'Agadir',
-                'Fès'
-            ]
-        ];
-        
-        $query = Property::with(['primaryImage', 'images']);
+        $citiesByCountry = Pays::with('villes')
+            ->get()
+            ->mapWithKeys(function ($country) {
+                return [
+                    $country->nom => $country->villes->map(function ($ville) {
+                        return [
+                            'id' => $ville->id,
+                            'nom' => $ville->nom
+                        ];
+                    })->all()
+                ];
+            });
 
-        // Filtre par ville
-        if ($request->has('city') && $request->city) {
-            $query->where('city', 'like', "%{$request->city}%");
-        }
+        $query = Property::with(['primaryImage', 'images', 'ville.pays']);
 
         // Filtre par pays
         if ($request->has('country') && $request->country) {
-            $query->where('country', $request->country);
+            $query->whereHas('ville.pays', function ($q) use ($request) {
+                $q->where('nom', $request->country);
+            });
+        }
+
+        // Filtre par ville
+        if ($request->has('city') && $request->city) {
+            $query->whereHas('ville', function ($q) use ($request) {
+                $q->where('ville_id', '=', $request->city);
+            });
         }
 
         // Filtre par note minimum
@@ -91,7 +83,15 @@ class PropertyController
             $query->where('type', $request->type);
         }
 
-        $apartments = $query->paginate(9);
+        // Get authenticated user
+        $user = auth()->user();
+
+        $apartments = $query->paginate(9)
+            ->through(function ($property) use ($user) {
+                // Add isFavorited property
+                $property->isFavorited = $user ? $user->favorites()->where('property_id', $property->id)->exists() : false;
+                return $property;
+            });
 
         return view('hébergement.index', [
             'apartments' => $apartments,
@@ -101,7 +101,7 @@ class PropertyController
 
     public function show($id)
     {
-        if (!is_numeric($id) || (int)$id != $id) {
+        if (!is_numeric($id) || (int) $id != $id) {
             abort(404);
         }
 
@@ -111,7 +111,19 @@ class PropertyController
 
     public function create()
     {
-        return view('hébergement.create');
+        $citiesByCountry = Pays::with('villes')
+            ->get()
+            ->mapWithKeys(function ($country) {
+                return [
+                    $country->nom => $country->villes->map(function ($ville) {
+                        return [
+                            'id' => $ville->id,
+                            'nom' => $ville->nom
+                        ];
+                    })->all()
+                ];
+            });
+        return view('hébergement.create', compact('citiesByCountry'));
     }
 
     public function store(Request $request)
@@ -126,11 +138,10 @@ class PropertyController
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'location' => 'required|string',
-            'city' => 'required|string',
-            'country' => 'required|string',
+            'ville_id' => 'required|exists:villes,id',
             'price' => 'required|numeric|min:0',
-            'bedrooms' => 'required|integer|min:1',
-            'max_guests' => 'required|integer|min:1',
+            'bedrooms' => 'required|integer|min:1|max:10',
+            'max_guests' => 'required|integer|min:1|max:10',
             'type' => 'required|string',
             'equipments' => 'array',
             'minimum_nights' => 'required|integer|min:1',
@@ -146,11 +157,10 @@ class PropertyController
             // Create property with basic info
             $property = Property::create([
                 'user_id' => Auth::id(),
+                'ville_id' => $request->ville_id,
                 'title' => $request->title,
                 'description' => $request->description,
-                'location' => $request->location, 
-                'city' => $request->city,
-                'country' => $request->country,
+                'location' => $request->location,
                 'price' => $request->price,
                 'bedrooms' => $request->bedrooms,
                 'max_guests' => $request->max_guests,
@@ -166,28 +176,28 @@ class PropertyController
             // Process images
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
-                
+
                 // Track which images to skip (if any were deleted in the UI)
                 $deletedIndices = [];
                 if ($request->has('deleted_images')) {
                     $deletedIndices = explode(',', $request->deleted_images);
                 }
-                
+
                 foreach ($images as $index => $image) {
                     // Skip deleted images
-                    if (in_array((string)$index, $deletedIndices)) {
+                    if (in_array((string) $index, $deletedIndices)) {
                         continue;
                     }
-                    
+
                     $fileName = time() . '_' . $index . '.' . $image->getClientOriginalExtension();
                     $folderPath = "properties/{$property->id}";
-                    
+
                     // Make sure the directory exists
                     Storage::disk('public')->makeDirectory($folderPath);
-                    
+
                     // Store the image
                     $path = $image->storeAs($folderPath, $fileName, 'public');
-                    
+
                     // Create the image record
                     $property->images()->create([
                         'image_url' => $path,
@@ -197,20 +207,20 @@ class PropertyController
             }
 
             \DB::commit();
-            
+
             // Redirect with success
             return redirect()->route('hébergements.show', $property)
                 ->with('success', 'Property created successfully!');
-                
+
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Error creating property: ' . $e->getMessage());
-            
+
             // Clean up any images already uploaded
             if (isset($property) && $property->id) {
                 Storage::disk('public')->deleteDirectory('properties/' . $property->id);
             }
-            
+
             return back()->withInput()
                 ->with('error', 'An error occurred while creating the property: ' . $e->getMessage());
         }
@@ -218,12 +228,12 @@ class PropertyController
 
     public function edit($id)
     {
-        if (!is_numeric($id) || (int)$id != $id) {
+        if (!is_numeric($id) || (int) $id != $id) {
             abort(404);
         }
 
         $property = Property::with('images')->findOrFail($id);
-        
+
         // Check if current user is the owner of the property
         if (auth()->user()->id !== $property->user_id) {
             return redirect()->route('owner.dashboard')
@@ -235,12 +245,12 @@ class PropertyController
 
     public function update(Request $request, $id)
     {
-        if (!is_numeric($id) || (int)$id != $id) {
+        if (!is_numeric($id) || (int) $id != $id) {
             abort(404);
         }
 
         $property = Property::findOrFail($id);
-        
+
         // Check if current user is the owner of the property
         if (auth()->user()->id !== $property->user_id) {
             return redirect()->route('owner.dashboard')
@@ -251,11 +261,10 @@ class PropertyController
             'title' => 'required|max:255',
             'description' => 'required',
             'location' => 'required|max:255',
-            'city' => 'required|string',
-            'country' => 'required|string',
+            'ville_id' => 'required|exists:villes,id',
             'price' => 'required|numeric|min:0',
-            'bedrooms' => 'required|integer|min:1',
-            'max_guests' => 'required|integer|min:1',
+            'bedrooms' => 'required|integer|min:1|max:10',
+            'max_guests' => 'required|integer|min:1|max:10',
             'type' => 'required|string',
             'equipments' => 'array',
             'minimum_nights' => 'required|integer|min:1',
@@ -275,13 +284,13 @@ class PropertyController
                 foreach ($request->file('images') as $index => $image) {
                     $fileName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                     $folderPath = "properties/{$property->id}";
-                    
+
                     // Make sure the directory exists
                     Storage::disk('public')->makeDirectory($folderPath);
-                    
+
                     // Store the image
                     $path = $image->storeAs($folderPath, $fileName, 'public');
-                    
+
                     // Create image record
                     $property->images()->create([
                         'image_url' => $path,
@@ -300,12 +309,12 @@ class PropertyController
 
     public function destroy($id)
     {
-        if (!is_numeric($id) || (int)$id != $id) {
+        if (!is_numeric($id) || (int) $id != $id) {
             abort(404);
         }
-        
+
         $property = Property::findOrFail($id);
-        
+
         // Check if current user is the owner of the property
         if (auth()->user()->id !== $property->user_id) {
             return redirect()->route('owner.dashboard')

@@ -10,11 +10,10 @@ return new class extends Migration {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('ville_id')->constrained('villes')->onDelete('cascade'); // Nouvelle relation
             $table->string('title');
             $table->text('description');
             $table->string('location');
-            $table->string('city');
-            $table->string('country');
             $table->decimal('price', 10, 2);
             $table->integer('bedrooms');
             $table->integer('max_guests')->default(4);
