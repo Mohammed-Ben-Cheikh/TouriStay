@@ -327,11 +327,7 @@ class PropertyController
                 ->with('error', 'Impossible de supprimer une propriété avec des réservations existantes.');
         }
 
-        // Delete all associated images from storage
-        foreach ($property->images as $image) {
-            Storage::disk('public')->delete($image->image_url);
-        }
-
+        // Use soft delete instead of force delete
         $property->delete();
 
         return redirect()->route('owner.dashboard')

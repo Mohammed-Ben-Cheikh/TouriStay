@@ -20,7 +20,7 @@ class OwnerController
         
         $stats = [
             'total_properties' => $properties->count(),
-            'active_listings' => $properties->where('status', 'active')->count(),
+            'active_listings' => $properties->where('is_available', 1)->count(),
             'total_bookings' => $properties->sum('booking_count'),
             'total_revenue' => $properties->sum('total_revenue'),
         ];
@@ -37,26 +37,5 @@ class OwnerController
 
         return redirect()->route('owner.dashboard')
             ->with('success', 'Félicitations ! Vous êtes maintenant un propriétaire sur TouriStay.');
-    }
-
-    public function properties()
-    {
-        $properties = Property::where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('owner.properties', compact('properties'));
-    }
-
-    public function earnings()
-    {
-        $earnings = Property::where('user_id', Auth::id())
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_revenue) as total')
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
-            ->get();
-
-        return view('owner.earnings', compact('earnings'));
     }
 }

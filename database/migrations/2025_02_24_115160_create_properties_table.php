@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->date('available_until')->nullable();
             $table->integer('minimum_nights')->default(1);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

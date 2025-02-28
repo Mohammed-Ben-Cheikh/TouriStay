@@ -89,19 +89,25 @@
                                     </x-dropdown-link>
                                 @endif
                                 <div class="border-t border-gray-200"></div>
+
                                 <x-dropdown-link href="{{ route('favorites.index') }}">
                                     {{ __('Mes Favorites') }}
                                 </x-dropdown-link>
+                                
                                 <div class="border-t border-gray-200"></div>
 
-                                @if (auth()->user()->role === 'owner')
-                                    <x-dropdown-link href="{{ route('owner.dashboard') }}">
-                                        {{ __('Dashboard') }}
-                                    </x-dropdown-link>
-                                @else
-                                    <x-dropdown-link href="{{ route('become-an-owner') }}">
-                                        {{ __('devenir un propriétaire') }}
-                                    </x-dropdown-link>
+                                @if (auth()->user()->role === 'admin')
+                                <x-dropdown-link href="{{ route('admin.dashboard') }}">
+                                    {{ __('Admin Dashboard') }}
+                                </x-dropdown-link>
+                                @elseif (auth()->user()->role === 'owner')
+                                <x-dropdown-link href="{{ route('owner.dashboard') }}">
+                                    {{ __('Dashboard') }}
+                                </x-dropdown-link>
+                                @elseif (auth()->user()->role === 'tourist')
+                                <x-dropdown-link href="{{ route('become-an-owner') }}">
+                                    {{ __('devenir un propriétaire') }}
+                                </x-dropdown-link>
                                 @endif
 
                                 <div class="border-t border-gray-200"></div>

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\SoftDeletes; // Add this line
 
 class Property extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // Add SoftDeletes here
 
     protected $fillable = [
         'user_id',
