@@ -94,9 +94,9 @@
                                     </div>
                                 </div>
 
-                                <button class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition-colors">
-                                    Réserver maintenant
-                                </button>
+                                <a href="{{ route('check-in', $apartment['id']) }}" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition-colors">
+                                    Voir la disponibilité
+                                </a>
                             </div>
                         </div>
                     </div>

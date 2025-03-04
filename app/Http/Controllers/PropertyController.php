@@ -86,7 +86,7 @@ class PropertyController
         // Get authenticated user
         $user = auth()->user();
 
-        $apartments = $query->paginate(9)
+        $apartments = $query->paginate(6)
             ->through(function ($property) use ($user) {
                 // Add isFavorited property
                 $property->isFavorited = $user ? $user->favorites()->where('property_id', $property->id)->exists() : false;

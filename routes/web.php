@@ -1,10 +1,12 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\TouristController;
-use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\bookingController;
 
 Route::middleware([
     'auth:sanctum',
@@ -20,7 +22,7 @@ Route::middleware([
     Route::get('/hébergements/{hébergement}', [PropertyController::class, 'show'])->name('hébergements.show');
     Route::post('/favorites/{property}', [FavoriteController::class, 'toggleFavorite'])->name('favorites.toggle');
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-
+    Route::get('/check-in/{property}', [bookingController::class, 'index'])->name('check-in');
     // tourist routes
     Route::middleware(['isTourist'])->group(function () {
         Route::get('/become-an-owner', [OwnerController::class, 'welcome'])->name('become-an-owner');
